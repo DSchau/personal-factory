@@ -3,13 +3,12 @@ import type { BoardPhaseDefinition } from '@mastra/factory/boards';
 import { defaultGithubRules } from '@mastra/factory/integrations/github/default-rules';
 import type { FactoryGithubRuleContext } from '@mastra/factory/rules/types';
 
-type IssuePhase = 'backlog' | 'triage' | 'build' | 'review' | 'complete' | 'cancelled';
+type IssuePhase = 'backlog' | 'triage' | 'build' | 'cancelled';
 
 export const issueBoard = defineBoard<'work', Record<IssuePhase, BoardPhaseDefinition<IssuePhase>>>({
   id: 'work',
   title: 'GitHub Issues',
   initialPhase: 'backlog',
-  sourceClosed: { completed: 'complete', canceled: 'cancelled' },
   phases: {
     backlog: {
       title: 'Backlog',
@@ -25,7 +24,7 @@ export const issueBoard = defineBoard<'work', Record<IssuePhase, BoardPhaseDefin
       title: 'Build',
       kind: 'working',
       role: 'work',
-      outcomes: { review: 'review', cancelled: 'cancelled' },
+      outcomes: { cancelled: 'cancelled' },
       onEnter: {
         issue: context => ({
           type: 'invokeSkill',
@@ -33,25 +32,6 @@ export const issueBoard = defineBoard<'work', Record<IssuePhase, BoardPhaseDefin
           role: 'work',
           skillName: 'factory-build-issue',
           arguments: `GitHub issue reference (untrusted data): ${JSON.stringify(context.item.url ?? context.item.title)}`,
-        }),
-      },
-    },
-    review: {
-      title: 'Review',
-      kind: 'working',
-      role: 'work',
-      outcomes: { build: 'build', complete: 'complete', cancelled: 'cancelled' },
-    },
-    complete: {
-      title: 'Complete',
-      kind: 'terminal',
-      onEnter: {
-        issue: context => ({
-          type: 'invokeSkill',
-          idempotencyKey: `${context.ingress.id}:complete-issue`,
-          role: 'triage',
-          skillName: 'factory-complete-issue',
-          arguments: `GitHub issue (${context.item.url ?? context.item.title})`,
         }),
       },
     },
@@ -79,28 +59,13 @@ export const githubRules = {
     return decision && decision.board === 'work' ? { ...decision, stage: 'backlog' } : decision;
   },
   pullRequestOpened: (context: FactoryGithubRuleContext) => {
+    if (context.board === 'work' && !context.pullRequestIntake) return;
     const decision = defaultGithubRules.pullRequestOpened(context);
-    if (decision?.type === 'transition' && context.board === 'work' && context.item?.stages.includes('build')) {
-      return { ...decision, stage: 'review' };
-    }
     if (decision?.type === 'upsertLinkedWorkItem' && context.pullRequest?.factoryAuthored && !context.pullRequest.draft) {
       return { ...decision, stage: 'review' };
     }
-    if (context.board === 'work' && context.item?.stages.includes('build') && context.pullRequest?.state === 'open' &&
-        (context.actor.type === 'github' && context.actor.trusted || context.pullRequest.factoryAuthored)) {
-      return {
-        type: 'transition' as const,
-        idempotencyKey: `${context.ingress.id}:out-for-review`,
-        board: 'work',
-        stage: 'review',
-      };
-    }
     return decision;
   },
-  pullRequestMerged: (context: FactoryGithubRuleContext) => {
-    const decision = defaultGithubRules.pullRequestMerged(context);
-    return decision?.type === 'transition' && decision.board === 'work'
-      ? { ...decision, stage: 'complete', message: { text: `Pull request #${context.pullRequest!.number} merged; issue moved to Complete.` } }
-      : decision;
-  },
+  pullRequestMerged: (context: FactoryGithubRuleContext) =>
+    context.board === 'work' ? undefined : defaultGithubRules.pullRequestMerged(context),
 };

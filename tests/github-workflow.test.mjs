@@ -57,3 +57,78 @@ test('PR events leave the issue in Build and track the PR separately', () => {
   assert.equal(merged.board, 'review');
   assert.equal(merged.stage, 'done');
 });
+
+test('all open, review-ready PRs invoke the existing review skill', () => {
+  const context = {
+    actor: { type: 'github', trusted: false },
+    repository: { id: 1 },
+    factory: { createdAt: '2026-01-01T00:00:00Z' },
+    ingress: { id: 'new-pr' },
+    pullRequest: {
+      number: 9,
+      title: 'External contribution',
+      url: 'https://example.test/pull/9',
+      state: 'open',
+      factoryAuthored: false,
+      draft: false,
+    },
+  };
+
+  for (const factoryAuthored of [false, true]) {
+    const intake = githubRules.pullRequestOpened({
+      ...context,
+      pullRequest: { ...context.pullRequest, factoryAuthored },
+    });
+    assert.equal(intake.board, 'review');
+    assert.equal(intake.stage, 'review');
+  }
+
+  const reviewBoard = boards.find(board => board.id === 'review');
+  const invocation = reviewBoard.phases.review.onEnter.pullRequest({
+    ingress: { id: 'new-pr' },
+    item: {
+      source: 'github-pr',
+      url: context.pullRequest.url,
+      metadata: { githubPullRequestNumber: 9 },
+    },
+  });
+  assert.equal(invocation.type, 'invokeSkill');
+  assert.equal(invocation.skillName, 'factory-review');
+  assert.equal(invocation.role, 'review');
+});
+
+test('draft PRs wait until ready, and updates rereview external PRs', () => {
+  const context = {
+    board: 'review',
+    item: { stages: ['intake'], source: 'github-pr' },
+    actor: { type: 'github', trusted: false },
+    repository: { id: 1 },
+    factory: { createdAt: '2026-01-01T00:00:00Z' },
+    ingress: { id: 'updated-pr' },
+    pullRequest: {
+      number: 9,
+      title: 'External contribution',
+      url: 'https://example.test/pull/9',
+      state: 'open',
+      factoryAuthored: false,
+      draft: true,
+    },
+  };
+  assert.equal(githubRules.pullRequestOpened({ ...context, item: undefined }).stage, 'intake');
+  assert.equal(githubRules.pullRequestUpdated(context), undefined);
+
+  const ready = { ...context, pullRequest: { ...context.pullRequest, draft: false } };
+  assert.deepEqual(githubRules.pullRequestUpdated(ready), {
+    type: 'transition',
+    idempotencyKey: 'updated-pr:review-updated',
+    board: 'review',
+    stage: 'review',
+  });
+  assert.deepEqual(githubRules.pullRequestUpdated({ ...ready, item: { stages: ['review'], source: 'github-pr' } }), {
+    type: 'transition',
+    idempotencyKey: 'updated-pr:review-updated',
+    board: 'review',
+    stage: 'review',
+    reenter: true,
+  });
+});

@@ -71,10 +71,26 @@ export const githubRules = {
   pullRequestOpened: (context: FactoryGithubRuleContext) => {
     if (context.board === 'work' && !context.pullRequestIntake) return;
     const decision = defaultGithubRules.pullRequestOpened(context);
-    if (decision?.type === 'upsertLinkedWorkItem' && context.pullRequest?.factoryAuthored && !context.pullRequest.draft) {
+    if (decision?.type === 'upsertLinkedWorkItem' && context.pullRequest?.state === 'open' && !context.pullRequest.draft) {
       return { ...decision, stage: 'review' };
     }
     return decision;
+  },
+  pullRequestUpdated: (context: FactoryGithubRuleContext) => {
+    if (context.pullRequest?.draft) return;
+    const decision = defaultGithubRules.pullRequestUpdated(context);
+    if (decision || context.board !== 'review' || !context.item || context.pullRequest?.state !== 'open' || context.pullRequest.merged) {
+      return decision;
+    }
+    const reviewing = context.item.stages.includes('review');
+    if (!reviewing && !context.item.stages.includes('intake')) return;
+    return {
+      type: 'transition' as const,
+      idempotencyKey: `${context.ingress.id}:review-updated`,
+      board: 'review',
+      stage: 'review',
+      ...(reviewing ? { reenter: true } : {}),
+    };
   },
   pullRequestMerged: (context: FactoryGithubRuleContext) =>
     context.board === 'work' ? undefined : defaultGithubRules.pullRequestMerged(context),

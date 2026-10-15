@@ -19,7 +19,7 @@ export const issueBoard = defineBoard<'work', Record<IssuePhase, BoardPhaseDefin
       title: 'Triage',
       kind: 'working',
       role: 'triage',
-      outcomes: { cancelled: 'cancelled' },
+      outcomes: { build: 'build', cancelled: 'cancelled' },
       onEnter: {
         issue: context => ({
           type: 'invokeSkill',

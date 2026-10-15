@@ -3,7 +3,7 @@ import type { BoardPhaseDefinition } from '@mastra/factory/boards';
 import { defaultGithubRules } from '@mastra/factory/integrations/github/default-rules';
 import type { FactoryGithubRuleContext } from '@mastra/factory/rules/types';
 
-type IssuePhase = 'backlog' | 'build' | 'review' | 'complete' | 'cancelled';
+type IssuePhase = 'backlog' | 'triage' | 'build' | 'review' | 'complete' | 'cancelled';
 
 export const issueBoard = defineBoard<'work', Record<IssuePhase, BoardPhaseDefinition<IssuePhase>>>({
   id: 'work',
@@ -13,6 +13,11 @@ export const issueBoard = defineBoard<'work', Record<IssuePhase, BoardPhaseDefin
   phases: {
     backlog: {
       title: 'Backlog',
+      kind: 'resting',
+      outcomes: { triage: 'triage', build: 'build', cancelled: 'cancelled' },
+    },
+    triage: {
+      title: 'Triage',
       kind: 'resting',
       outcomes: { build: 'build', cancelled: 'cancelled' },
     },

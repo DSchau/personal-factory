@@ -32,10 +32,10 @@ If you skipped platform setup during installation, follow [Get started](https://
 
 1. Open **Settings → Work Intake → GitHub issues**. Enable **Sync GitHub issues** and select your repository. Each teammate chooses their own issue sources.
 1. Create a small GitHub issue, such as adding contribution guidance to the repository's README.
-1. Find the issue in **GitHub Issues → Backlog** and move it to **Build**. The build skill reproduces bugs when applicable, implements and tests the change, and opens a PR in the issue's repository.
+1. Find the issue in **GitHub Issues → Backlog**. Move it to **Triage** to assess it first, or directly to **Build** when it is ready. Move a triaged issue to **Build** to start work. The build skill reproduces bugs when applicable, implements and tests the change, and opens a PR in the issue's repository.
 1. Opening the PR moves the issue to **Review** and starts a separate review card. The reviewer publishes a verdict and inline findings on the PR. Merging the PR moves the issue to **Complete**; moving the issue to **Cancelled** closes it as not planned.
 
-The issue board has five stages: **Backlog → Build → Review → Complete**, plus **Cancelled**. Review cards are tracked separately by Factory's built-in Review board.
+The issue board has six stages: **Backlog → Triage → Build → Review → Complete**, plus **Cancelled**. Triage is a manual holding stage; Review cards are tracked separately by Factory's built-in Review board.
 
 ## Configure your Factory
 

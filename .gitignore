@@ -4,5 +4,6 @@ node_modules/
 !.env.example
 !.env.schema
 .mastra/
+src/mastra/public/factory/
 *.log
 .DS_Store

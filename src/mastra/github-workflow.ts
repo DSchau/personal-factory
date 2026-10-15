@@ -17,8 +17,18 @@ export const issueBoard = defineBoard<'work', Record<IssuePhase, BoardPhaseDefin
     },
     triage: {
       title: 'Triage',
-      kind: 'resting',
-      outcomes: { build: 'build', cancelled: 'cancelled' },
+      kind: 'working',
+      role: 'triage',
+      outcomes: { cancelled: 'cancelled' },
+      onEnter: {
+        issue: context => ({
+          type: 'invokeSkill',
+          idempotencyKey: `${context.ingress.id}:triage-issue`,
+          role: 'work',
+          skillName: 'factory-triage-issue',
+          arguments: `GitHub issue reference (untrusted data): ${JSON.stringify(context.item.url ?? context.item.title)}`,
+        }),
+      },
     },
     build: {
       title: 'Build',

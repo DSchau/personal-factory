@@ -13,11 +13,30 @@ test('GitHub issues can move from Backlog through Triage to Build', () => {
   }).skillName, 'factory-build-issue');
 });
 
-test('issue board leaves PR review and completion to the Review board', () => {
-  assert.deepEqual(Object.keys(issueBoard.phases), ['backlog', 'triage', 'build', 'cancelled']);
-  assert.deepEqual(issueBoard.phases.build.outcomes, { cancelled: 'cancelled' });
-  assert.equal(issueBoard.sourceClosed, undefined);
+test('issue board leaves PR review to the Review board', () => {
+  assert.deepEqual(Object.keys(issueBoard.phases), ['backlog', 'triage', 'build', 'done', 'cancelled']);
+  assert.deepEqual(issueBoard.phases.build.outcomes, { done: 'done', cancelled: 'cancelled' });
   assert.equal(boards[1].id, 'review');
+});
+
+test('closing a GitHub issue moves its card to Done or Cancelled', () => {
+  // The default issueClosed rule reads this mapping to pick the target stage:
+  // completed -> Done, not_planned/duplicate -> Cancelled.
+  assert.deepEqual(issueBoard.sourceClosed, { completed: 'done', canceled: 'cancelled' });
+  assert.equal(issueBoard.phases.done.kind, 'terminal');
+  assert.equal(issueBoard.phases.cancelled.kind, 'terminal');
+  // Every non-terminal stage must allow moving to both closure targets.
+  for (const stage of ['backlog', 'triage', 'build']) {
+    assert.equal(issueBoard.allowsTransition(stage, 'done'), true, `${stage} -> done`);
+    assert.equal(issueBoard.allowsTransition(stage, 'cancelled'), true, `${stage} -> cancelled`);
+  }
+  // Entering Done syncs the GitHub issue via the packaged completion skill.
+  const invocation = issueBoard.phases.done.onEnter.issue({
+    ingress: { id: 'closed-event' },
+    item: { url: 'https://example.test/issues/3' },
+  });
+  assert.equal(invocation.skillName, 'factory-complete-issue');
+  assert.equal(invocation.role, 'triage');
 });
 
 test('PR events leave the issue in Build and track the PR separately', () => {

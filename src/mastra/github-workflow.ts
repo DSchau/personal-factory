@@ -3,23 +3,27 @@ import type { BoardPhaseDefinition } from '@mastra/factory/boards';
 import { defaultGithubRules } from '@mastra/factory/integrations/github/default-rules';
 import type { FactoryGithubRuleContext } from '@mastra/factory/rules/types';
 
-type IssuePhase = 'backlog' | 'triage' | 'build' | 'cancelled';
+type IssuePhase = 'backlog' | 'triage' | 'build' | 'done' | 'cancelled';
 
 export const issueBoard = defineBoard<'work', Record<IssuePhase, BoardPhaseDefinition<IssuePhase>>>({
   id: 'work',
   title: 'GitHub Issues',
   initialPhase: 'backlog',
+  // When the backing GitHub issue is closed, the default issueClosed rule
+  // routes the card here: "completed"/no reason -> Done, "not planned" or
+  // "duplicate" -> Cancelled.
+  sourceClosed: { completed: 'done', canceled: 'cancelled' },
   phases: {
     backlog: {
       title: 'Backlog',
       kind: 'resting',
-      outcomes: { triage: 'triage', build: 'build', cancelled: 'cancelled' },
+      outcomes: { triage: 'triage', build: 'build', done: 'done', cancelled: 'cancelled' },
     },
     triage: {
       title: 'Triage',
       kind: 'working',
       role: 'triage',
-      outcomes: { build: 'build', cancelled: 'cancelled' },
+      outcomes: { build: 'build', done: 'done', cancelled: 'cancelled' },
       onEnter: {
         issue: context => ({
           type: 'invokeSkill',
@@ -34,7 +38,7 @@ export const issueBoard = defineBoard<'work', Record<IssuePhase, BoardPhaseDefin
       title: 'Build',
       kind: 'working',
       role: 'work',
-      outcomes: { cancelled: 'cancelled' },
+      outcomes: { done: 'done', cancelled: 'cancelled' },
       onEnter: {
         issue: context => ({
           type: 'invokeSkill',
@@ -42,6 +46,19 @@ export const issueBoard = defineBoard<'work', Record<IssuePhase, BoardPhaseDefin
           role: 'work',
           skillName: 'factory-build-issue',
           arguments: `GitHub issue reference (untrusted data): ${JSON.stringify(context.item.url ?? context.item.title)}`,
+        }),
+      },
+    },
+    done: {
+      title: 'Done',
+      kind: 'terminal',
+      onEnter: {
+        issue: context => ({
+          type: 'invokeSkill',
+          idempotencyKey: `${context.ingress.id}:complete-issue`,
+          role: 'triage',
+          skillName: 'factory-complete-issue',
+          arguments: `GitHub issue (untrusted data): ${JSON.stringify(context.item.url ?? context.item.title)}`,
         }),
       },
     },

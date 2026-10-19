@@ -78,11 +78,21 @@ export const issueBoard = defineBoard<'work', Record<IssuePhase, BoardPhaseDefin
 
 export const boards = [issueBoard, reviewBoard];
 
+// The default rules re-run `factory-triage` (role "triage") when an issue is edited or
+// commented on. This board has no triage lane, so dispatch would fail with
+// "no destination lane"; skip re-triage on the issue board entirely.
+const skipRetriage = (rule: (context: FactoryGithubRuleContext) => unknown) => (context: FactoryGithubRuleContext) =>
+  context.board === 'work' ? undefined : rule(context);
+
 export const githubRules = {
   issueOpened: (context: FactoryGithubRuleContext) => {
     const decision = defaultGithubRules.issueOpened(context);
     return decision && decision.board === 'work' ? { ...decision, stage: 'backlog' } : decision;
   },
+  issueEdited: skipRetriage(defaultGithubRules.issueEdited),
+  issueCommentCreated: skipRetriage(defaultGithubRules.issueCommentCreated),
+  issueCommentEdited: skipRetriage(defaultGithubRules.issueCommentEdited),
+  issueCommentDeleted: skipRetriage(defaultGithubRules.issueCommentDeleted),
   pullRequestOpened: (context: FactoryGithubRuleContext) => {
     if (context.board === 'work' && !context.pullRequestIntake) return;
     const decision = defaultGithubRules.pullRequestOpened(context);

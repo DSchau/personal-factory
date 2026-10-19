@@ -56,6 +56,24 @@ test('closing a GitHub issue moves its card to Done or Cancelled', () => {
   assert.equal(invocation.role, 'triage');
 });
 
+test('issue edits and comments do not re-triage (board has no triage lane)', () => {
+  const base = {
+    board: 'work',
+    actor: { type: 'github', login: 'someone', trusted: true, factoryAuthored: false },
+    item: { id: 'item-1', source: 'github-issue', url: 'https://example.test/issues/3', stages: ['backlog'] },
+    ingress: { id: 'edit-event' },
+  };
+  const events = {
+    issueEdited: { issueChange: { title: true } },
+    issueCommentCreated: {},
+    issueCommentEdited: {},
+    issueCommentDeleted: {},
+  };
+  for (const [event, extra] of Object.entries(events)) {
+    assert.equal(githubRules[event]({ ...base, event, ...extra }), undefined, event);
+  }
+});
+
 test('PR events leave the issue in Build and track the PR separately', () => {
   const pullRequest = {
     number: 8,

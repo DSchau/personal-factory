@@ -1,20 +1,37 @@
 import assert from 'node:assert/strict';
+import { readdirSync } from 'node:fs';
 import test from 'node:test';
 import { boards, githubRules, issueBoard } from '../src/mastra/github-workflow.ts';
 
-test('GitHub issues can move from Backlog through Triage to Build', () => {
-  assert.equal(issueBoard.phases.backlog.outcomes.triage, 'triage');
-  assert.equal(issueBoard.phases.triage.title, 'Triage');
-  assert.equal(issueBoard.phases.triage.outcomes.build, 'build');
-  assert.equal(issueBoard.phases.backlog.outcomes.build, 'build');
-  assert.equal(issueBoard.phases.build.onEnter.issue({
+test('GitHub issues move straight from Backlog to Build', () => {
+  assert.equal(issueBoard.initialPhase, 'backlog');
+  assert.deepEqual(issueBoard.phases.backlog.outcomes, { build: 'build', done: 'done', cancelled: 'cancelled' });
+  assert.equal(issueBoard.phases.backlog.onEnter, undefined);
+  const build = issueBoard.phases.build.onEnter.issue({
     ingress: { id: 'test-event' },
     item: { url: 'https://example.test/issues/3' },
-  }).skillName, 'factory-build-issue');
+  });
+  assert.equal(build.type, 'invokeSkill');
+  assert.equal(build.role, 'work');
+  assert.equal(build.skillName, undefined);
+  assert.match(build.prompt, /open a pull request/);
+  assert.match(build.prompt, /"https:\/\/example\.test\/issues\/3"/);
+});
+
+test('issue board only references skills bundled with @mastra/factory', () => {
+  const bundled = readdirSync(new URL('../node_modules/@mastra/factory/factory-skills/', import.meta.url));
+  for (const [name, phase] of Object.entries(issueBoard.phases)) {
+    const decision = phase.onEnter?.issue({ ingress: { id: 'x' }, item: { url: 'https://example.test/issues/1' } });
+    if (!decision) continue;
+    assert.ok(
+      decision.skillName === undefined || bundled.includes(decision.skillName),
+      `${name} references non-bundled skill ${decision.skillName}`,
+    );
+  }
 });
 
 test('issue board leaves PR review to the Review board', () => {
-  assert.deepEqual(Object.keys(issueBoard.phases), ['backlog', 'triage', 'build', 'done', 'cancelled']);
+  assert.deepEqual(Object.keys(issueBoard.phases), ['backlog', 'build', 'done', 'cancelled']);
   assert.deepEqual(issueBoard.phases.build.outcomes, { done: 'done', cancelled: 'cancelled' });
   assert.equal(boards[1].id, 'review');
 });
@@ -26,7 +43,7 @@ test('closing a GitHub issue moves its card to Done or Cancelled', () => {
   assert.equal(issueBoard.phases.done.kind, 'terminal');
   assert.equal(issueBoard.phases.cancelled.kind, 'terminal');
   // Every non-terminal stage must allow moving to both closure targets.
-  for (const stage of ['backlog', 'triage', 'build']) {
+  for (const stage of ['backlog', 'build']) {
     assert.equal(issueBoard.allowsTransition(stage, 'done'), true, `${stage} -> done`);
     assert.equal(issueBoard.allowsTransition(stage, 'cancelled'), true, `${stage} -> cancelled`);
   }

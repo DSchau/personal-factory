@@ -32,10 +32,10 @@ If you skipped platform setup during installation, follow [Get started](https://
 
 1. Open **Settings → Work Intake → GitHub issues**. Enable **Sync GitHub issues** and select your repository. Each teammate chooses their own issue sources.
 1. Create a small GitHub issue, such as adding contribution guidance to the repository's README.
-1. Find the issue in **GitHub Issues → Backlog**. Move it to **Triage** to assess it first, or directly to **Build** when it is ready. Move a triaged issue to **Build** to start work. The build skill reproduces bugs when applicable, implements and tests the change, and opens a PR in the issue's repository.
+1. Find the issue in **GitHub Issues → Backlog**. Move it to **Build** to start work. The build skill reproduces bugs when applicable, implements and tests the change, and opens a PR in the issue's repository.
 1. Opening any non-draft PR starts a separate card in **Reviewing** on Factory's Review board, regardless of who authored it. The existing `factory-review` skill publishes a verdict and inline findings on the PR. Draft PRs wait until marked ready for review; later PR updates trigger re-review. The Review card moves to Done when the PR merges; the issue remains in **Build** because the issue board does not track PR status. Moving the issue to **Cancelled** closes it as not planned, and moving it to **Done** marks it complete.
 
-The issue board has five stages: **Backlog → Triage → Build → Done**, plus **Cancelled**. Triage is a manual holding stage; PR review is tracked separately on Factory's built-in Review board. Closing a GitHub issue moves its card automatically: closed as completed goes to **Done**, closed as not planned or duplicate goes to **Cancelled**.
+The issue board has four stages: **Backlog → Build → Done**, plus **Cancelled**. PR review is tracked separately on Factory's built-in Review board. Closing a GitHub issue moves its card automatically: closed as completed goes to **Done**, closed as not planned or duplicate goes to **Cancelled**.
 
 ## Configure your Factory
 

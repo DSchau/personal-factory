@@ -141,6 +141,7 @@ test('all open, review-ready PRs invoke the existing review skill', () => {
   const invocation = reviewBoard.phases.review.onEnter.pullRequest({
     ingress: { id: 'new-pr' },
     item: {
+      id: 'item-9',
       source: 'github-pr',
       url: context.pullRequest.url,
       metadata: { githubPullRequestNumber: 9 },

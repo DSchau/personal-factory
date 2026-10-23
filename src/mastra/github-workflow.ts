@@ -20,8 +20,14 @@ const BUILD_PROMPT = [
 const CANCEL_PROMPT =
   'The Factory card for the GitHub issue referenced below was moved to Cancelled. Identify the backing issue from the bound work item; if it is still open, close it as not planned (`gh issue close <number> --repo <owner/repo> --reason "not planned"`) with a short comment. If it is already closed, do nothing. Never close a pull request or an issue in another repository.';
 
-export const issueBoard = defineBoard<'work', Record<IssuePhase, BoardPhaseDefinition<IssuePhase>>>({
-  id: 'work',
+// The id must not be "work": the Factory UI hard-codes the built-in Work board's
+// quick actions (Investigate -> triage, Build -> execute, Close -> canceled) for
+// that id, which do not exist here. Any other id gets a catalog-driven menu that
+// only offers the stages declared below. The default GitHub rules also treat
+// non-"work" boards as hands-off (no re-triage, no PR-driven moves), which is
+// exactly what this board wants.
+export const issueBoard = defineBoard<'issues', Record<IssuePhase, BoardPhaseDefinition<IssuePhase>>>({
+  id: 'issues',
   title: 'GitHub Issues',
   initialPhase: 'backlog',
   // When the backing GitHub issue is closed, the default issueClosed rule
@@ -78,31 +84,21 @@ export const issueBoard = defineBoard<'work', Record<IssuePhase, BoardPhaseDefin
 
 export const boards = [issueBoard, reviewBoard];
 
-// The default rules re-run `factory-triage` (role "triage") when an issue is edited or
-// commented on. This board has no triage lane, so dispatch would fail with
-// "no destination lane"; skip re-triage on the issue board entirely.
-const skipRetriage =
-  <T>(rule: (context: FactoryGithubRuleContext) => T) =>
-  (context: FactoryGithubRuleContext) =>
-    context.board === 'work' ? undefined : rule(context);
-
 export const githubRules = {
+  // New issues land in Backlog on the issues board instead of the (uninstalled) Work board.
   issueOpened: (context: FactoryGithubRuleContext) => {
     const decision = defaultGithubRules.issueOpened(context);
-    return decision && decision.board === 'work' ? { ...decision, stage: 'backlog' } : decision;
+    return decision && decision.board === 'work' ? { ...decision, board: issueBoard.id, stage: 'backlog' } : decision;
   },
-  issueEdited: skipRetriage(defaultGithubRules.issueEdited),
-  issueCommentCreated: skipRetriage(defaultGithubRules.issueCommentCreated),
-  issueCommentEdited: skipRetriage(defaultGithubRules.issueCommentEdited),
-  issueCommentDeleted: skipRetriage(defaultGithubRules.issueCommentDeleted),
+  // Every open, non-draft PR goes straight to Reviewing on the Review board.
   pullRequestOpened: (context: FactoryGithubRuleContext) => {
-    if (context.board === 'work' && !context.pullRequestIntake) return;
     const decision = defaultGithubRules.pullRequestOpened(context);
     if (decision?.type === 'upsertLinkedWorkItem' && context.pullRequest?.state === 'open' && !context.pullRequest.draft) {
       return { ...decision, stage: 'review' };
     }
     return decision;
   },
+  // Drafts wait in Intake; once ready (or on later pushes) the PR is (re)reviewed.
   pullRequestUpdated: (context: FactoryGithubRuleContext) => {
     if (context.pullRequest?.draft) return;
     const decision = defaultGithubRules.pullRequestUpdated(context);
@@ -119,6 +115,4 @@ export const githubRules = {
       ...(reviewing ? { reenter: true } : {}),
     };
   },
-  pullRequestMerged: (context: FactoryGithubRuleContext) =>
-    context.board === 'work' ? undefined : defaultGithubRules.pullRequestMerged(context),
 };

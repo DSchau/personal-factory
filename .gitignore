@@ -7,3 +7,4 @@ node_modules/
 src/mastra/public/factory/
 *.log
 .DS_Store
+.slack-config-token.json

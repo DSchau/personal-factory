@@ -19,10 +19,12 @@
   "dependencies": {
     "@mastra/auth-workos": "1.6.8-alpha.0",
     "@mastra/code-sdk": "1.16.0-alpha.8",
+    "@mastra/connect": "1.2.0",
     "@mastra/core": "1.80.0-alpha.7",
     "@mastra/e2b": "0.15.1-alpha.1",
     "@mastra/factory": "0.26.0-alpha.0",
     "@mastra/libsql": "1.27.1-alpha.1",
+    "@mastra/mcp": "2.6.0-alpha.3",
     "@mastra/memory": "1.39.1-alpha.3",
     "@mastra/pg": "1.33.0-alpha.3",
     "@mastra/platform-workspace": "1.10.0-alpha.3",

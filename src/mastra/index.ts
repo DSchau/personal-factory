@@ -28,6 +28,7 @@ import { RedisStreamsPubSub } from '@mastra/redis-streams';
 import { getDatabasePath } from '@mastra/code-sdk/utils/project';
 import { DEFAULT_RETENTION } from '@mastra/code-sdk/utils/storage-maintenance';
 import { MastraAuthWorkos } from '@mastra/auth-workos';
+import type { FactoryTools } from '@mastra/factory';
 import { createFactorySecretEncryption, LocalFactorySandbox, MastraFactory } from '@mastra/factory';
 import { boards, githubRules } from './github-workflow';
 import { GithubIntegration } from '@mastra/factory/integrations/github/integration';
@@ -39,6 +40,8 @@ import { PlatformJiraIntegration } from '@mastra/factory/integrations/platform/j
 import { LinearIntegration } from '@mastra/factory/integrations/linear/integration';
 import { SlackIntegration } from '@mastra/factory/integrations/slack/integration';
 import type { IMastraAuthProvider } from '@mastra/core/server';
+import { MCPClient } from '@mastra/mcp';
+import { tools as connectTools } from '@mastra/connect';
 
 /**
  * Parse a positive-integer env knob; anything else means "use the default".
@@ -380,7 +383,57 @@ const sandbox =
           env: localSandboxEnv(),
         });
 
+/**
+ * Instance-wide tools (Factory's `tools` option), resolved on every run and
+ * shared by every session and user of this Factory. Two sources, each opt-in:
+ *
+ * - FACTORY_MCP_URL (+ optional FACTORY_MCP_TOKEN bearer): one MCP server this
+ *   process connects to directly, holding its credential. `pnpm mcp:test`
+ *   starts a local one. Its tools are named `custom_<tool>`.
+ * - FACTORY_PLATFORM_TOOLS=1: tools of the connections attached to this
+ *   Platform project (MASTRA_PROJECT_ID), including MCP servers. Platform holds
+ *   the credentials (OAuth included) and proxies every call, so nothing secret
+ *   lives in this deploy. Connections added on Platform show up without a
+ *   restart. Tools are named `<integration>_<tool>`.
+ */
+const mcpUrl = process.env.FACTORY_MCP_URL?.trim();
+const mcpClient = mcpUrl
+  ? new MCPClient({
+      id: 'personal-factory-mcp',
+      servers: {
+        custom: {
+          url: new URL(mcpUrl),
+          requestInit: process.env.FACTORY_MCP_TOKEN
+            ? { headers: { Authorization: `Bearer ${process.env.FACTORY_MCP_TOKEN}` } }
+            : undefined,
+        },
+      },
+    })
+  : undefined;
+// Listed once and reused. If the server is down, the run goes ahead without
+// its tools and the next run tries again; boot never waits on it.
+let mcpTools: ReturnType<NonNullable<typeof mcpClient>['listTools']> | undefined;
+const platformTools =
+  process.env.FACTORY_PLATFORM_TOOLS === '1'
+    ? connectTools({ projectId: process.env.MASTRA_PROJECT_ID?.trim() })
+    : undefined;
+
+const tools: FactoryTools = async ({ requestContext }) => {
+  const resolved = {};
+  if (mcpClient) {
+    mcpTools ??= mcpClient.listTools().catch(error => {
+      mcpTools = undefined;
+      console.warn(`[factory] MCP server ${mcpUrl} unavailable, running without its tools:`, error);
+      return {};
+    });
+    Object.assign(resolved, await mcpTools);
+  }
+  if (platformTools) Object.assign(resolved, await platformTools({ requestContext }));
+  return resolved;
+};
+
 export const factory = new MastraFactory({
+  tools,
   auth,
   secretEncryption,
   integrations,

@@ -14,7 +14,7 @@
     "start": "varlock run -- mastra start",
     "deploy": "mastra deploy",
     "slack:manifest": "node scripts/slack-manifest.mjs",
-    "update:alpha": "pnpm add -E --config.minimumReleaseAge=0 @mastra/auth-workos@alpha @mastra/code-sdk@alpha @mastra/core@alpha @mastra/e2b@alpha @mastra/factory@alpha @mastra/libsql@alpha @mastra/memory@alpha @mastra/pg@alpha @mastra/platform-workspace@alpha @mastra/redis-streams@alpha @mastra/slack@alpha && pnpm add -D -E --config.minimumReleaseAge=0 mastra@alpha"
+    "update:alpha": "pnpm add -E @mastra/auth-workos@alpha @mastra/code-sdk@alpha @mastra/core@alpha @mastra/e2b@alpha @mastra/factory@alpha @mastra/libsql@alpha @mastra/memory@alpha @mastra/pg@alpha @mastra/platform-workspace@alpha @mastra/redis-streams@alpha @mastra/slack@alpha && pnpm add -D -E mastra@alpha"
   },
   "dependencies": {
     "@mastra/auth-workos": "1.6.8-alpha.0",

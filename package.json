@@ -14,8 +14,7 @@
     "start": "varlock run -- mastra start",
     "deploy": "mastra deploy",
     "slack:manifest": "node scripts/slack-manifest.mjs",
-    "update:alpha": "pnpm add -E @mastra/auth-workos@alpha @mastra/code-sdk@alpha @mastra/core@alpha @mastra/e2b@alpha @mastra/factory@alpha @mastra/libsql@alpha @mastra/memory@alpha @mastra/pg@alpha @mastra/platform-workspace@alpha @mastra/redis-streams@alpha @mastra/slack@alpha && pnpm add -D -E mastra@alpha",
-    "mcp:test": "tsx scripts/test-mcp-server.ts"
+    "update:alpha": "pnpm add -E @mastra/auth-workos@alpha @mastra/code-sdk@alpha @mastra/core@alpha @mastra/e2b@alpha @mastra/factory@alpha @mastra/libsql@alpha @mastra/memory@alpha @mastra/pg@alpha @mastra/platform-workspace@alpha @mastra/redis-streams@alpha @mastra/slack@alpha && pnpm add -D -E mastra@alpha"
   },
   "dependencies": {
     "@mastra/auth-workos": "1.6.8-alpha.0",
@@ -36,7 +35,6 @@
   "devDependencies": {
     "@types/node": "22.20.1",
     "mastra": "1.37.0-alpha.0",
-    "tsx": "4.23.15",
     "typescript": "^5.9.2",
     "varlock": "^1.9.0"
   },

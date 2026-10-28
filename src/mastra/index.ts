@@ -388,8 +388,8 @@ const sandbox =
  * shared by every session and user of this Factory. Two sources, each opt-in:
  *
  * - FACTORY_MCP_URL (+ optional FACTORY_MCP_TOKEN bearer): one MCP server this
- *   process connects to directly, holding its credential. `pnpm mcp:test`
- *   starts a local one. Its tools are named `custom_<tool>`.
+ *   process connects to directly, holding its credential. Its tools are named
+ *   `custom_<tool>`.
  * - FACTORY_PLATFORM_TOOLS=1: tools of the connections attached to this
  *   Platform project (MASTRA_PROJECT_ID), including MCP servers. Platform holds
  *   the credentials (OAuth included) and proxies every call, so nothing secret

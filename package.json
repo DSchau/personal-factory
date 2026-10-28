@@ -13,25 +13,26 @@
     "build": "mastra build --dir src/mastra",
     "start": "varlock run -- mastra start",
     "deploy": "mastra deploy",
-    "slack:manifest": "node scripts/slack-manifest.mjs"
+    "slack:manifest": "node scripts/slack-manifest.mjs",
+    "update:alpha": "pnpm add -E --config.minimumReleaseAge=0 @mastra/auth-workos@alpha @mastra/code-sdk@alpha @mastra/core@alpha @mastra/e2b@alpha @mastra/factory@alpha @mastra/libsql@alpha @mastra/memory@alpha @mastra/pg@alpha @mastra/platform-workspace@alpha @mastra/redis-streams@alpha @mastra/slack@alpha && pnpm add -D -E --config.minimumReleaseAge=0 mastra@alpha"
   },
   "dependencies": {
     "@mastra/auth-workos": "1.6.8-alpha.0",
-    "@mastra/code-sdk": "1.15.1-alpha.5",
-    "@mastra/core": "1.80.0-alpha.4",
+    "@mastra/code-sdk": "1.16.0-alpha.8",
+    "@mastra/core": "1.80.0-alpha.7",
     "@mastra/e2b": "0.15.1-alpha.1",
-    "@mastra/factory": "0.25.0-alpha.5",
-    "@mastra/libsql": "1.27.1-alpha.0",
-    "@mastra/memory": "1.39.1-alpha.2",
-    "@mastra/pg": "1.33.0-alpha.2",
-    "@mastra/platform-workspace": "1.10.0-alpha.1",
-    "@mastra/redis-streams": "0.6.5-alpha.1",
-    "@mastra/slack": "1.8.0-alpha.1",
+    "@mastra/factory": "0.26.0-alpha.0",
+    "@mastra/libsql": "1.27.1-alpha.1",
+    "@mastra/memory": "1.39.1-alpha.3",
+    "@mastra/pg": "1.33.0-alpha.3",
+    "@mastra/platform-workspace": "1.10.0-alpha.3",
+    "@mastra/redis-streams": "0.7.0-alpha.2",
+    "@mastra/slack": "1.8.0-alpha.2",
     "zod": "^4.3.6"
   },
   "devDependencies": {
     "@types/node": "22.20.1",
-    "mastra": "1.36.0-alpha.4",
+    "mastra": "1.37.0-alpha.0",
     "typescript": "^5.9.2",
     "varlock": "^1.9.0"
   },

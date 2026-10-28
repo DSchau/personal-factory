@@ -1,0 +1,73 @@
+{
+  "display_information": {
+    "name": "DAS",
+    "description": "AI assistant powered by Mastra",
+    "background_color": "#000000"
+  },
+  "features": {
+    "app_home": {
+      "home_tab_enabled": false,
+      "messages_tab_enabled": true,
+      "messages_tab_read_only_enabled": false
+    },
+    "bot_user": {
+      "display_name": "DAS",
+      "always_online": true
+    },
+    "agent_view": {
+      "agent_description": "AI assistant powered by Mastra"
+    }
+  },
+  "oauth_config": {
+    "redirect_urls": [
+      "https://dschau.tail9b165a.ts.net/connect/slack/oidc/callback"
+    ],
+    "scopes": {
+      "user": [
+        "openid",
+        "profile"
+      ],
+      "bot": [
+        "chat:write",
+        "chat:write.public",
+        "im:write",
+        "channels:history",
+        "channels:read",
+        "groups:history",
+        "groups:read",
+        "im:history",
+        "im:read",
+        "mpim:history",
+        "mpim:read",
+        "app_mentions:read",
+        "users:read",
+        "reactions:write",
+        "files:read",
+        "files:write",
+        "assistant:write"
+      ]
+    },
+    "pkce_enabled": false
+  },
+  "settings": {
+    "event_subscriptions": {
+      "request_url": "https://dschau.tail9b165a.ts.net/api/agent-controllers/mastra-code/channels/slack/webhook",
+      "bot_events": [
+        "app_mention",
+        "message.channels",
+        "message.groups",
+        "message.im",
+        "message.mpim",
+        "agent_session_stopped"
+      ]
+    },
+    "interactivity": {
+      "is_enabled": true,
+      "request_url": "https://dschau.tail9b165a.ts.net/api/agent-controllers/mastra-code/channels/slack/webhook"
+    },
+    "org_deploy_enabled": false,
+    "socket_mode_enabled": false,
+    "token_rotation_enabled": false,
+    "is_mcp_enabled": false
+  }
+}

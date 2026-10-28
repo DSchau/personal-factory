@@ -432,8 +432,22 @@ const tools: FactoryTools = async ({ requestContext }) => {
   return resolved;
 };
 
+/**
+ * Key/value credentials for a theoretical AWS integration, handed to Factory
+ * as-is. Unset variables are left out; with none set, AWS is omitted.
+ */
+const awsCredentials = Object.fromEntries(
+  Object.entries({
+    AWS_ACCESS_KEY_ID: process.env.AWS_ACCESS_KEY_ID,
+    AWS_SECRET_ACCESS_KEY: process.env.AWS_SECRET_ACCESS_KEY,
+    AWS_SESSION_TOKEN: process.env.AWS_SESSION_TOKEN,
+    AWS_REGION: process.env.AWS_REGION,
+  }).filter((entry): entry is [string, string] => Boolean(entry[1]?.trim())),
+);
+
 export const factory = new MastraFactory({
   tools,
+  credentials: Object.keys(awsCredentials).length ? { aws: awsCredentials } : undefined,
   auth,
   secretEncryption,
   integrations,

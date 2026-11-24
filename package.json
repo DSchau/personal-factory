@@ -22,11 +22,11 @@
     "@mastra/core": "latest",
     "@mastra/factory": "latest",
     "@mastra/pg": "latest",
-    "zod": "^4.4.3"
+    "zod": "^4.6.7"
   },
   "devDependencies": {
     "@types/node": "latest",
     "mastra": "latest",
-    "typescript": "^6.0.3"
+    "typescript": "^7.0.2"
   }
 }

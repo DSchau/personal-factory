@@ -19,14 +19,14 @@
     "node": ">=22.19.0"
   },
   "dependencies": {
-    "@mastra/core": "latest",
-    "@mastra/factory": "latest",
-    "@mastra/pg": "latest",
+    "@mastra/core": "1.86.0-alpha.9",
+    "@mastra/factory": "0.31.0-alpha.10",
+    "@mastra/pg": "1.38.0-alpha.4",
     "zod": "^4.6.7"
   },
   "devDependencies": {
     "@types/node": "latest",
-    "mastra": "latest",
+    "mastra": "1.40.2-alpha.9",
     "typescript": "^7.0.2"
   }
 }
